@@ -1,0 +1,38 @@
+name: Deploy BitBurner Scripts
+
+# Trigger on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js environment (for BitBurner scripts if using Node)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Step 3: Install dependencies (if using any npm packages)
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 4: Deploy scripts
+      - name: Copy Scripts to BitBurner Folder
+        run: |
+          # Example: copy everything to a local 'bitburner-scripts' folder
+          mkdir -p ~/bitburner-scripts
+          cp -r ./* ~/bitburner-scripts
+          echo "Scripts deployed to ~/bitburner-scripts"
+
+      # Optional Step 5: Notify deployment success
+      - name: Deployment Success
+        run: echo "BitBurner scripts updated successfully!"
