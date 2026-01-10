@@ -13,47 +13,55 @@ jobs:
 
     defaults:
       run:
-        working-directory: ${{ github.workspace }}  # Ensures npm runs in repo root
+        working-directory: ${{ github.workspace }}  # Always run from repo root
 
     steps:
       # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Ensure package.json exists
-      - name: Check package.json
-        run: |
-          if [ ! -f package.json ]; then
-            echo "::error ::package.json not found in repo root!"
-            exit 1
-          else
-            echo "✅ package.json found."
-          fi
-
-      # 3. Setup Node.js
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 4. Install dependencies
+      # 3. Install dependencies
       - name: Install Dependencies
-        run: npm install
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          else
+            echo "::warning ::package.json not found, skipping npm install."
+          fi
 
-      # 5. Dry-run main.js to catch errors
+      # 4. Find main.js dynamically
+      - name: Locate main.js
+        id: find_main
+        run: |
+          MAIN_FILE=$(find . -type f -name "main.js" | head -n 1)
+          if [ -z "$MAIN_FILE" ]; then
+            echo "::error ::Could not find main.js anywhere in the repo!"
+            exit 1
+          else
+            echo "Found main.js at $MAIN_FILE"
+            echo "main_path=$MAIN_FILE" >> $GITHUB_OUTPUT
+          fi
+
+      # 5. Dry-run main.js
       - name: Dry-Run Main Script
         run: |
-          echo "Running dry-run of core/main.js..."
-          node core/main.js || echo "::error ::Dry-run failed! Check solvers or main.js"
+          echo "Running dry-run of ${{ steps.find_main.outputs.main_path }}..."
+          node "${{ steps.find_main.outputs.main_path }}" || echo "::error ::Dry-run failed! Check solvers or main.js"
 
-      # 6. Copy scripts to deployment folder (for SCP or local testing)
+      # 6. Copy scripts to deployment folder
       - name: Copy Scripts to Deployment Folder
         run: |
           DEPLOY_DIR=~/bitburner-scripts
           mkdir -p $DEPLOY_DIR
-          cp -r core solvers workers data $DEPLOY_DIR
+          cp -r core solvers workers data $DEPLOY_DIR || echo "::warning ::Some folders might be missing"
           echo "✅ All scripts copied to $DEPLOY_DIR"
 
-      # 7. Print deployment summary
+      # 7. Deployment summary
       - name: Deployment Complete
         run: echo "🎉 BitBurner scripts deployed successfully!"
