@@ -4,23 +4,42 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      # Checkout the repository
+      # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Copy scripts to deployment folder
-      - name: Copy Scripts to BitBurner Folder
-        run: |
-          mkdir -p ~/bitburner-scripts
-          cp -r ./* ~/bitburner-scripts
-          echo "Scripts deployed to ~/bitburner-scripts"
+      # 2. Setup Node.js (for local testing)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
-      # Optional: Deployment success message
-      - name: Deployment Success
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # 4. Dry-run main.js to check for runtime errors
+      - name: Dry-Run Main Script
+        run: |
+          echo "Running dry-run of core/main.js..."
+          node core/main.js || echo "::error ::Dry-run failed! Check your solvers or main.js"
+
+      # 5. Copy scripts to deployment folder (e.g., for later SCP upload)
+      - name: Copy Scripts to Deployment Folder
+        run: |
+          DEPLOY_DIR=~/bitburner-scripts
+          mkdir -p $DEPLOY_DIR
+          cp -r core solvers workers data $DEPLOY_DIR
+          echo "All scripts deployed to $DEPLOY_DIR"
+
+      # 6. Print success summary
+      - name: Deployment Complete
         run: echo "BitBurner scripts updated successfully!"
