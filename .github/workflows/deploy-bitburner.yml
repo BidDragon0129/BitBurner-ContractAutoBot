@@ -14,12 +14,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Optional: Setup Node.js only if you plan to run Node-based tests
-      #- name: Setup Node.js
-      #  uses: actions/setup-node@v3
-      #  with:
-      #    node-version: '20'
-
       # Copy scripts to deployment folder
       - name: Copy Scripts to BitBurner Folder
         run: |
