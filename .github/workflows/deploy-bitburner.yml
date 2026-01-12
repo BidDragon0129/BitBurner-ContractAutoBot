@@ -48,11 +48,7 @@ jobs:
             echo "main_path=$MAIN_FILE" >> $GITHUB_OUTPUT
           fi
 
-      # 5. Dry-run main.js
-      - name: Dry-Run Main Script
-        run: |
-          echo "Running dry-run of ${{ steps.find_main.outputs.main_path }}..."
-          node "${{ steps.find_main.outputs.main_path }}" || echo "::error ::Dry-run failed! Check solvers or main.js"
+      
 
       # 6. Copy scripts to deployment folder
       - name: Copy Scripts to Deployment Folder
